@@ -1,0 +1,25 @@
+name: Mirror JFrog CLI Image to Local Repo
+
+on:
+  workflow_dispatch: # Allows you to trigger this manually from the GitHub Actions tab
+
+jobs:
+  pull-and-push:
+    runs-on: self-hosted # Uses your local/internal machine
+    env:
+      SOURCE_IMAGE: releases-docker.jfrog.io/jfrog/jfrog-cli-v2-jf:latest
+      TARGET_IMAGE: ${{ secrets.LOCAL_REGISTRY_URL }}/jfrog-cli-v2-jf:latest
+
+    steps:
+      - name: Pull image from JFrog
+        run: docker pull ${{ env.SOURCE_IMAGE }}
+
+      - name: Log in to Local Registry
+        run: |
+          echo "${{ secrets.LOCAL_REGISTRY_PASSWORD }}" | docker login ${{ secrets.LOCAL_REGISTRY_URL }} -u "${{ secrets.LOCAL_REGISTRY_USER }}" --password-stdin
+
+      - name: Tag image for Local Repo
+        run: docker tag ${{ env.SOURCE_IMAGE }} ${{ env.TARGET_IMAGE }}
+
+      - name: Push image to Local Repo
+        run: docker push ${{ env.TARGET_IMAGE }}
